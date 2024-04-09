@@ -1,0 +1,64 @@
+name: Linux ARM
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'extras/images/**'
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: "Linux ARM", os: "ubuntu-latest", target: "linux-arm" }
+          - { name: "Linux ARM64", os: "ubuntu-latest", target: "linux-arm64" }
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: Upgrade PIP
+        run: python3 -m pip install --upgrade pip setuptools wheel
+
+      - name: Display Python version
+        run: python3 --version
+
+      - name: Display PIP version
+        run: python3 -m pip --version
+
+      - name: Python requirements
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build
+        run: python3 make.py build-${{ matrix.config.target }}
+
+      - name: Pack
+        run: python3 -m tarfile -c ../${{ matrix.config.target }}.tar.gz Release
+        working-directory: build
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifact-${{ matrix.config.target }}
+          path: ${{ matrix.config.target }}.tar.gz
+
+      - name: Release
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: ${{ matrix.config.target }}.tar.gz
