@@ -35,92 +35,96 @@ class FileDialogCallback : public CefRunFileDialogCallback{
 
         void OnFileDialogDismissed (const std::vector< CefString > &file_paths){
             if(1 == file_paths.size()){
-                VolumeViewer& vvInstance = VolumeViewer::getInstance();
-
-                LychnisReader& reader = vvInstance.getReader(file_paths[0]);
-                // LychnisReader reader(filePath);
-                if(reader.openImage() == false) {
-                    m_callback->Failure(404, "(未找到)应用找不到请求的工程文件");
-                    return;
-                }
-                VolumeViewerCore& viewer = vvInstance.getViewer();
-                // Test cpp call js.
-                // frame->ExecuteJavaScript("alert('加载成功')", frame->GetURL(), 0);
-                // VolumeViewerCore viewer(&reader);
-
-                // Set size
-                cv::Size viewerSize(1600, 1200);
-                viewer.resizeEvent(viewerSize, 1);
-
-                // Import nodes
-                double offset[] = {0, 0, 0};
-                QVariantMap projectInfo = reader.m_loadedProjectInfo;
-                viewer.importNodes(projectInfo, reader.m_voxelSize, offset);
+                VolumeViewer& vvInstance = VolumeViewer::getInstance(m_frame);
                 
-                // Get level
-                int levelSize = (reader.m_imageReader->getLevelIndexes()).size();
-                auto level = reader.m_imageReader->getLevel(levelSize / 2);
+                // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Message");
+                // msg->GetArgumentList()->SetString(0, "Message Testing");
+                // m_frame->SendProcessMessage(PID_RENDERER, msg);
+                vvInstance.onLoadProject(file_paths[0]);
+                // LychnisReader& reader = vvInstance.getReader(file_paths[0]);
+                // // LychnisReader reader(filePath);
+                // if(reader.openImage() == false) {
+                //     m_callback->Failure(404, "(未找到)应用找不到请求的工程文件");
+                //     return;
+                // }
+                // VolumeViewerCore& viewer = vvInstance.getViewer();
+                // // Test cpp call js.
+                // // frame->ExecuteJavaScript("alert('加载成功')", frame->GetURL(), 0);
+                // // VolumeViewerCore viewer(&reader);
 
-                // Set bounds
-                double bounds[6];
-                for (int i = 0; i < 3; i++) {
-                    auto v1 = ((double *)&reader.m_origin)[i], v2 = v1 + reader.m_dims[i];
-                    bounds[2 * i] = v1;
-                    bounds[2 * i + 1] = v2;
-                }
-                viewer.setBounds(bounds);
+                // // Set size
+                // cv::Size viewerSize(1600, 1200);
+                // viewer.resizeEvent(viewerSize, 1);
 
-                // Set channel informations
-                QList<ChannelBarInfo *> channelInfos;
-                auto channelList = projectInfo["channels"].toList();
-                const auto numChannels = level->dataIds[0].size();
-                if (channelList.size() == numChannels) {
-                    for (auto &channel : channelList) { channelInfos.append(new ChannelBarInfo(channel.toMap())); }
-                } else { for (int i = 0; i < numChannels; i++) { channelInfos.append(nullptr); }}
-                viewer.setChannelInfos(channelInfos);
+                // // Import nodes
+                // double offset[] = {0, 0, 0};
+                // QVariantMap projectInfo = reader.m_loadedProjectInfo;
+                // viewer.importNodes(projectInfo, reader.m_voxelSize, offset);
+                
+                // // Get level
+                // int levelSize = (reader.m_imageReader->getLevelIndexes()).size();
+                // auto level = reader.m_imageReader->getLevel(levelSize / 2);
 
-                // Set data buffer
-                AutoBuffer buffer, singleChanBuffer, dstBuffer;
-                size_t numVoxels = level->dims[2] * level->dims[1] * level->dims[0];
-                auto singleChanBuf = (uint16_t *)singleChanBuffer.buffer(numVoxels * 2);
-                auto buf = (uint16_t *)buffer.buffer(singleChanBuffer.length() * numChannels);
+                // // Set bounds
+                // double bounds[6];
+                // for (int i = 0; i < 3; i++) {
+                //     auto v1 = ((double *)&reader.m_origin)[i], v2 = v1 + reader.m_dims[i];
+                //     bounds[2 * i] = v1;
+                //     bounds[2 * i + 1] = v2;
+                // }
+                // viewer.setBounds(bounds);
 
-                // Read data from image to buffer
-                size_t start[] = {0, 0, 0};
-                QList<int> channels;
-                for (int i = 0; i < numChannels; i++) {
-                    reader.m_imageReader->readBlock(level, start, level->dims, singleChanBuf, 0, i);
-                    uint16_t *pBuffer = buf + i, *pBuffer2 = singleChanBuf;
-                    for (size_t j = 0; j < numVoxels; j++, pBuffer2++, pBuffer += numChannels) { *pBuffer = *pBuffer2; }
-                    channels.append(i);
-                }
+                // // Set channel informations
+                // QList<ChannelBarInfo *> channelInfos;
+                // auto channelList = projectInfo["channels"].toList();
+                // const auto numChannels = level->dataIds[0].size();
+                // if (channelList.size() == numChannels) {
+                //     for (auto &channel : channelList) { channelInfos.append(new ChannelBarInfo(channel.toMap())); }
+                // } else { for (int i = 0; i < numChannels; i++) { channelInfos.append(nullptr); }}
+                // viewer.setChannelInfos(channelInfos);
+
+                // // Set data buffer
+                // AutoBuffer buffer, singleChanBuffer, dstBuffer;
+                // size_t numVoxels = level->dims[2] * level->dims[1] * level->dims[0];
+                // auto singleChanBuf = (uint16_t *)singleChanBuffer.buffer(numVoxels * 2);
+                // auto buf = (uint16_t *)buffer.buffer(singleChanBuffer.length() * numChannels);
+
+                // // Read data from image to buffer
+                // size_t start[] = {0, 0, 0};
+                // QList<int> channels;
+                // for (int i = 0; i < numChannels; i++) {
+                //     reader.m_imageReader->readBlock(level, start, level->dims, singleChanBuf, 0, i);
+                //     uint16_t *pBuffer = buf + i, *pBuffer2 = singleChanBuf;
+                //     for (size_t j = 0; j < numVoxels; j++, pBuffer2++, pBuffer += numChannels) { *pBuffer = *pBuffer2; }
+                //     channels.append(i);
+                // }
                 
-                // Set volume
-                size_t dims[3]; // x,y,z
-                double spacing[3], origin[3];
-                for (int i = 0; i < 3; i++) {
-                    dims[i] = level->dims[2 - i]; // zyx to xyz
-                    spacing[i] = level->spacing[2 - i] * ((double *)&reader.m_voxelSize)[i];
-                    origin[i] = (double)start[2 - i] * spacing[i] + ((double *)&reader.m_origin)[i];
-                }
-                viewer.setVolume(buf, dims, spacing, origin, channels, true, false);
-                viewer.setShowScaleBar(false);
+                // // Set volume
+                // size_t dims[3]; // x,y,z
+                // double spacing[3], origin[3];
+                // for (int i = 0; i < 3; i++) {
+                //     dims[i] = level->dims[2 - i]; // zyx to xyz
+                //     spacing[i] = level->spacing[2 - i] * ((double *)&reader.m_voxelSize)[i];
+                //     origin[i] = (double)start[2 - i] * spacing[i] + ((double *)&reader.m_origin)[i];
+                // }
+                // viewer.setVolume(buf, dims, spacing, origin, channels, true, false);
+                // viewer.setShowScaleBar(false);
                 
-                cv::Mat image = viewer.renderToImage(); // rgba
+                // cv::Mat image = viewer.renderToImage(); // rgba
                 
-                // Change to base64
-                std::vector<uchar> tempBuf;
-                cv::imencode(".jpg", image, tempBuf);
-                // std::string base64_image = CefBase64Encode(tempBuf.data(), tempBuf.size()*sizeof(uchar));
-                // std::string base64_image = shared::util::base64_encode(tempBuf.data(), tempBuf.size());
+                // // Change to base64
+                // std::vector<uchar> tempBuf;
+                // cv::imencode(".jpg", image, tempBuf);
+                // // std::string base64_image = CefBase64Encode(tempBuf.data(), tempBuf.size()*sizeof(uchar));
+                // // std::string base64_image = shared::util::base64_encode(tempBuf.data(), tempBuf.size());
                 
-                // Blob
-                CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
+                // // Blob
+                // CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
                 
-                // IPC
-                CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
-                msg->GetArgumentList()->SetBinary(0, imageBinary);
-                m_frame->SendProcessMessage(PID_RENDERER, msg);
+                // // IPC
+                // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
+                // msg->GetArgumentList()->SetBinary(0, imageBinary);
+                // m_frame->SendProcessMessage(PID_RENDERER, msg);
 
                 m_callback->Success("工程加载成功");
             }
@@ -153,37 +157,6 @@ bool MenuBarBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> 
     if(nullptr != func){
         return (this->*func)(browser, frame, queryId, request, persistent, callback);
     }
-
-    // {
-    //     const std::string &messageName = "loadProject";
-    //     const std::string &requestMessage = request;
-
-    //     if (requestMessage.rfind(messageName, 0) == 0)
-    //     {
-    //         return onTaskLoadProject(browser, frame, queryId, request, persistent, callback, messageName, requestMessage);
-    //     }
-        
-    // }
-
-    // {
-    //     const std::string &messageName = "App::ReverseData";
-    //     const std::string &requestMessage = request;
-
-    //     if (requestMessage.rfind(messageName, 0) == 0)
-    //     {
-    //         return onTaskReverseData(browser, frame, queryId, request, persistent, callback, messageName, requestMessage);
-    //     }
-    // }
-
-    // {
-    //     const std::string &messageName = "App::NetworkRequest";
-    //     const std::string &requestMessage = request;
-
-    //     if (requestMessage.rfind(messageName, 0) == 0)
-    //     {
-    //         return onTaskNetworkRequest(browser, frame, queryId, request, persistent, callback, messageName, requestMessage);
-    //     }
-    // }
 
     return false;
 }
@@ -250,120 +223,12 @@ void MenuBarBinding::onRequestComplete(CefRefPtr<Callback> callback, CefURLReque
     callback = nullptr;
 }
 
-bool MenuBarBinding::onTaskLoadProject(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback)
-{
-    // CEF_REQUIRE_FILE_USER_BLOCKING_THREAD();
-    // Load Lychnis Project D:/Data/Test/Z16058_C3test.lyp   
-    // VolumeViewer& vvInstance = VolumeViewer::getInstance();
-    // std::string projectPath;
-    
-    std::vector<CefString> filter={".lyp", ".lyp2", ".json"};
-    CefRefPtr<CefRunFileDialogCallback> cbk = new FileDialogCallback(frame, callback);
-    browser->GetHost()->RunFileDialog(FILE_DIALOG_OPEN, "Please select a project file", "", filter, cbk);
-    
-
-    // bool bLoad = vvInstance.onLoadProject(projectPath);
-    // if(bLoad == FALSE) {
-    //     callback->Failure(400, "（错误请求）未选择文件");
-    //     return false;
-    // }
-
-    // LychnisReader& reader = vvInstance.getReader(projectPath);
-    // // LychnisReader reader(filePath);
-    // if(reader.openImage() == false) {
-    //     callback->Failure(404, "(未找到)应用找不到请求的工程文件");
-    //     return false;
-    // }
-    // VolumeViewerCore& viewer = vvInstance.getViewer();
-    // // Test cpp call js.
-    // // frame->ExecuteJavaScript("alert('加载成功')", frame->GetURL(), 0);
-    // // VolumeViewerCore viewer(&reader);
-
-    // // Set size
-    // cv::Size viewerSize(1600, 1200);
-    // viewer.resizeEvent(viewerSize, 1);
-
-    // // Import nodes
-    // double offset[] = {0, 0, 0};
-    // QVariantMap projectInfo = reader.m_loadedProjectInfo;
-    // viewer.importNodes(projectInfo, reader.m_voxelSize, offset);
-    
-    // // Get level
-    // int levelSize = (reader.m_imageReader->getLevelIndexes()).size();
-    // auto level = reader.m_imageReader->getLevel(levelSize / 2);
-
-    // // Set bounds
-    // double bounds[6];
-    // for (int i = 0; i < 3; i++) {
-    //     auto v1 = ((double *)&reader.m_origin)[i], v2 = v1 + reader.m_dims[i];
-    //     bounds[2 * i] = v1;
-    //     bounds[2 * i + 1] = v2;
-    // }
-    // viewer.setBounds(bounds);
-
-    // // Set channel informations
-    // QList<ChannelBarInfo *> channelInfos;
-    // auto channelList = projectInfo["channels"].toList();
-    // const auto numChannels = level->dataIds[0].size();
-    // if (channelList.size() == numChannels) {
-    //     for (auto &channel : channelList) { channelInfos.append(new ChannelBarInfo(channel.toMap())); }
-    // } else { for (int i = 0; i < numChannels; i++) { channelInfos.append(nullptr); }}
-    // viewer.setChannelInfos(channelInfos);
-
-    // // Set data buffer
-    // AutoBuffer buffer, singleChanBuffer, dstBuffer;
-    // size_t numVoxels = level->dims[2] * level->dims[1] * level->dims[0];
-    // auto singleChanBuf = (uint16_t *)singleChanBuffer.buffer(numVoxels * 2);
-    // auto buf = (uint16_t *)buffer.buffer(singleChanBuffer.length() * numChannels);
-
-    // // Read data from image to buffer
-    // size_t start[] = {0, 0, 0};
-    // QList<int> channels;
-    // for (int i = 0; i < numChannels; i++) {
-	//     reader.m_imageReader->readBlock(level, start, level->dims, singleChanBuf, 0, i);
-	//     uint16_t *pBuffer = buf + i, *pBuffer2 = singleChanBuf;
-    //     for (size_t j = 0; j < numVoxels; j++, pBuffer2++, pBuffer += numChannels) { *pBuffer = *pBuffer2; }
-    //     channels.append(i);
-    // }
-    
-    // // Set volume
-    // size_t dims[3]; // x,y,z
-    // double spacing[3], origin[3];
-    // for (int i = 0; i < 3; i++) {
-    //     dims[i] = level->dims[2 - i]; // zyx to xyz
-    //     spacing[i] = level->spacing[2 - i] * ((double *)&reader.m_voxelSize)[i];
-    //     origin[i] = (double)start[2 - i] * spacing[i] + ((double *)&reader.m_origin)[i];
-    // }
-    // viewer.setVolume(buf, dims, spacing, origin, channels, true, false);
-    // viewer.setShowScaleBar(false);
-	
-    // cv::Mat image = viewer.renderToImage(); // rgba
-    
-    // // Change to base64
-    // std::vector<uchar> tempBuf;
-    // cv::imencode(".jpg", image, tempBuf);
-    // // std::string base64_image = CefBase64Encode(tempBuf.data(), tempBuf.size()*sizeof(uchar));
-    // // std::string base64_image = shared::util::base64_encode(tempBuf.data(), tempBuf.size());
-    
-    // // Blob
-    // CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
-    
-    // // IPC
-    // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
-    // msg->GetArgumentList()->SetBinary(0, imageBinary);
-    // frame->SendProcessMessage(PID_RENDERER, msg);
-
-    // callback->Success("工程加载成功");
-
-    // CefRefPtr<CefDictionaryValue> dic = CefDictionaryValue::Create();
-    // dic->SetBinary("image", imageBinary);
-    // CefRefPtr<CefValue> cefResponse = CefValue::Create();
-    // cefResponse->SetDictionary(dic);
-
-    // CefString response = CefWriteJSON(cefResponse, JSON_WRITER_DEFAULT);
-    // callback->Success(response);
-    // callback->Success(base64_image);
-
+bool MenuBarBinding::onTaskLoadProject(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
+    if(!VolumeViewer::getInstance(frame).isLoaded()){
+        std::vector<CefString> filter={".lyp", ".lyp2", ".json"};
+        CefRefPtr<CefRunFileDialogCallback> cbk = new FileDialogCallback(frame, callback);
+        browser->GetHost()->RunFileDialog(FILE_DIALOG_OPEN, "Please select a project file", "", filter, cbk);
+    }
 
     return true;
 }

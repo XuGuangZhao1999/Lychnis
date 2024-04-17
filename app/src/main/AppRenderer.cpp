@@ -60,6 +60,24 @@ bool RendererApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRef
         context->Exit();
 
         return true;
+    }else if(message->GetName() == "Message"){
+        CefRefPtr<CefV8Context> context = frame->GetV8Context();
+        context->Enter();
+        CefRefPtr<CefListValue> args = message->GetArgumentList();
+        
+        auto msg = CefV8Value::CreateString(args->GetString(0));
+        
+        CefRefPtr<CefV8Value> global = context->GetGlobal();
+        CefRefPtr<CefV8Value> paintFunction = global->GetValue("showMessage");
+
+        if(paintFunction.get() && paintFunction->IsFunction()){
+            CefV8ValueList args;
+            args.push_back(msg);
+            paintFunction->ExecuteFunction(global, args);
+        }
+        context->Exit();
+
+        return true;
     }
 
 
