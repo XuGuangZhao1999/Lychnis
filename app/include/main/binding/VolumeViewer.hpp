@@ -15,7 +15,7 @@ namespace app{
         private:
             // New data members
             CefRefPtr<CefFrame> m_frame;
-            static std::atomic_bool bLoaded;
+            static std::atomic_bool bProject_ImageLoaded;
 
             // lychnis: VolumeViewer's data members
             cv::Size m_windowSize, m_fixedViewerSize, m_autoViewerSize;
@@ -28,7 +28,8 @@ namespace app{
 
             int m_blockSize[3]{}, m_blockSize3D[3]{};
             std::thread* m_thread{nullptr};
-            std::atomic_int m_currentRes3D{-1};
+            
+            std::atomic_int m_currentRes3D{-1}, m_nextNodeOperation{-1};
             std::atomic_int m_nextResolution{-1}, m_nextChannel{-1};
             std::atomic<std::string*> m_imagePath2Load{nullptr};
             std::atomic<LychnisProjectReader *> m_projectProto2Load{nullptr};
@@ -42,6 +43,8 @@ namespace app{
             ~VolumeViewer();
 
             void mainLoop();
+            void importNodes();
+            void operateNodes();
             void openImageFile();
             void updateBlockSize();
             void updateCenter();

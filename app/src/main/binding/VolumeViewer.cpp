@@ -11,6 +11,7 @@
 #include "channelbarinfo.h"
 
 #include <QFileInfo>
+#include <QDebug>
 
 namespace app{
     namespace binding{
@@ -22,13 +23,14 @@ namespace app{
             VolumeReloadInfo() : b3d(true), bChanging(false) {}
         };
         struct ImportNodesInfo {
-            std::vector<std::string> paths;
+            QStringList paths;
             bool bMerge{true};
-            explicit ImportNodesInfo(const std::string &p) : paths{p} {}
+            explicit ImportNodesInfo(const QString &p) { paths.append(p); }
             ImportNodesInfo() = default;
         };
 
-        std::atomic_bool VolumeViewer::bLoaded = false;
+
+        std::atomic_bool VolumeViewer::bProject_ImageLoaded = false;
 
         VolumeViewer::VolumeViewer(LychnisReader& reader, CefRefPtr<CefFrame> frame) : VolumeViewerCore(&reader), m_frame(frame){
             m_project = &reader;
@@ -52,6 +54,8 @@ namespace app{
                 }
 
                 if(nullptr != m_project->m_imageReader){
+                    importNodes();
+                    operateNodes();
                     updateBlockSize();
                     updateCenter();
                     updateResolution();
@@ -60,6 +64,7 @@ namespace app{
                     updateBlock();
                     saveProject();
                 }
+                qDebug()<<"main loop ......\n";
 
                 auto end = std::chrono::high_resolution_clock::now();
                 std::chrono::duration<double, std::milli> elapsed = end - start;
@@ -91,6 +96,9 @@ namespace app{
                 showMessage("Unable to open image file");
                 return;
             }
+
+            cv::Size viewerSize(1600, 1200);
+            resizeEvent(viewerSize, 1);
 
             bool bProjectValid = !m_project->m_projectPath.empty();
 
@@ -147,8 +155,15 @@ namespace app{
                 if (bUpdateCenter) { memcpy(center, m_project->m_center, sizeof(m_project->m_center)); }
 
                 // emit c->centerLoaded(rx, ry, rz, center[0], center[1], center[2]);
-                double bounds[] = {(double)rx.x(), (double)rx.y(), (double)ry.x(), (double)ry.y(), (double)rz.x(), (double)rz.y()};
-	            setBounds(bounds);
+                // double bounds[] = {(double)rx.x(), (double)rx.y(), (double)ry.x(), (double)ry.y(), (double)rz.x(), (double)rz.y()};
+	            // setBounds(bounds);
+                double bounds[6];
+                for (int i = 0; i < 3; i++) {
+                    auto v1 = ((double *)&m_project->m_origin)[i], v2 = v1 + m_project->m_dims[i];
+                    bounds[2 * i] = v1;
+                    bounds[2 * i + 1] = v2;
+                }
+                setBounds(bounds);
             };
             onUpdateVolumeGeometry(bProjectValid, true);
 
@@ -219,6 +234,66 @@ namespace app{
             updateBlock();
 
             showMessage("Image loaded");
+        }
+
+        void VolumeViewer::importNodes(){
+            auto protoPtr = m_projectProto2Load.exchange(nullptr);
+            if (nullptr != protoPtr) {
+                auto dp = protoPtr->m_origin - m_project->m_origin;
+                importNodesProto(protoPtr->m_loadedProjectInfo, protoPtr->m_voxelSize, dp, protoPtr->m_loadedProto);
+            }
+
+            auto pathPtr = m_nodesPath2Load.exchange(nullptr);
+            if (nullptr == pathPtr) { return; }
+            auto paths = pathPtr->paths;//QString::fromStdString(*pathPtr).split("\n");
+            g_mergeRadius = pathPtr->bMerge ? 1E-6 : -1;
+            delete pathPtr;
+
+            auto c = Common::i();
+            int index = 0;
+            for (auto &path : paths) {
+                auto progressStr = QString(" (%1/%2) ").arg(QString::number(++index), QString::number(paths.size()));
+                emit c->showMessage(tr("Importing nodes") + progressStr + "...");
+
+                QVariantMap params;
+                bool bLoaded{false};
+                void *ptr{nullptr};
+                if (path.endsWith(".lypb")) {
+                ptr = LychnisProjectReader::loadNodesProto(path.toStdString(), params);
+                bLoaded = nullptr != ptr;
+                } else if (path.endsWith(".lyp") || path.endsWith(".json")) {
+                bLoaded = Util::loadJson(path, params);
+                } else if (path.endsWith(".swc")) { if (!importNodesSWC(path)) { return; } else { continue; }}
+
+                if (!bLoaded) {
+                emit c->showMessage(tr("Unable to load file ") + path, 3000);
+                return;
+                }
+
+                bool bOK;
+                cv::Point3d voxelSize;
+                if (!LychnisProjectReader::loadVoxelSize(params, voxelSize)) {
+                emit c->showMessage("", 100);
+                return;
+                }
+
+                cv::Point3d origin, dp;
+                bOK = Util::string2Point(params["origin"].toString(), origin);
+                if (bOK) { dp = origin - cv::Point3d(m_project->m_origin); }
+
+                if (nullptr == ptr) { VolumeViewerCore::importNodes(params, voxelSize, (double *)&dp); }
+                else { importNodesProto(params, voxelSize, dp, ptr); }
+            }
+
+            emit nodeImported();
+            emit c->showMessage(tr("Nodes imported"), 500);
+        }
+
+        void VolumeViewer::operateNodes(){
+            int code = m_nextNodeOperation.exchange(-1);
+            if (code < 0) { return; }
+
+            if (4 == code) { buildNodeGroups(); }
         }
 
         void VolumeViewer::updateBlockSize(){
@@ -627,6 +702,7 @@ namespace app{
                 return ;
             }
 
+            bProject_ImageLoaded = true;
             auto& params = m_project->m_loadedProjectInfo;
 
             if(m_project->m_bAnnotation && m_project->m_sliceThickness > 0){
@@ -641,7 +717,7 @@ namespace app{
             if(m_project->isBinary()){
                 m_projectProto2Load.exchange(m_project);
             }else if(params.contains("nodes")){
-                delete m_nodesPath2Load.exchange(new ImportNodesInfo(projectPath));
+                delete m_nodesPath2Load.exchange(new ImportNodesInfo(QString::fromStdString(projectPath)));
             }
         }
 
@@ -663,7 +739,7 @@ namespace app{
         }
 
         bool VolumeViewer::isLoaded(){
-            return bLoaded;
+            return bProject_ImageLoaded;
         }
 
         QVariantMap VolumeViewer::exportDisplayParams(){
@@ -712,6 +788,7 @@ namespace app{
             CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
             msg->GetArgumentList()->SetBinary(0, imageBinary);
             m_frame->SendProcessMessage(PID_RENDERER, msg);
+            qDebug() << "Paint Event ......";
         }
 
         void VolumeViewer::updateScreen(){
