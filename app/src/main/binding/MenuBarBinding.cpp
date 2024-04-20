@@ -35,12 +35,13 @@ class FileDialogCallback : public CefRunFileDialogCallback{
 
         void OnFileDialogDismissed (const std::vector< CefString > &file_paths){
             if(1 == file_paths.size()){
-                VolumeViewer& vvInstance = VolumeViewer::getInstance(m_frame);
+                VolumeViewer& vvInstance = VolumeViewer::getInstance(file_paths[0]);
                 
                 // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Message");
                 // msg->GetArgumentList()->SetString(0, "Message Testing");
                 // m_frame->SendProcessMessage(PID_RENDERER, msg);
-                vvInstance.onLoadProject(file_paths[0]);
+                vvInstance.onLoadProject();
+
                 // LychnisReader& reader = vvInstance.getReader(file_paths[0]);
                 // // LychnisReader reader(filePath);
                 // if(reader.openImage() == false) {
@@ -110,21 +111,21 @@ class FileDialogCallback : public CefRunFileDialogCallback{
                 // viewer.setVolume(buf, dims, spacing, origin, channels, true, false);
                 // viewer.setShowScaleBar(false);
                 
-                // cv::Mat image = viewer.renderToImage(); // rgba
+                cv::Mat image = vvInstance.renderToImage(); // rgba
                 
                 // // Change to base64
-                // std::vector<uchar> tempBuf;
-                // cv::imencode(".jpg", image, tempBuf);
+                std::vector<uchar> tempBuf;
+                cv::imencode(".jpg", image, tempBuf);
                 // // std::string base64_image = CefBase64Encode(tempBuf.data(), tempBuf.size()*sizeof(uchar));
                 // // std::string base64_image = shared::util::base64_encode(tempBuf.data(), tempBuf.size());
                 
                 // // Blob
-                // CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
+                CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
                 
                 // // IPC
-                // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
-                // msg->GetArgumentList()->SetBinary(0, imageBinary);
-                // m_frame->SendProcessMessage(PID_RENDERER, msg);
+                CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
+                msg->GetArgumentList()->SetBinary(0, imageBinary);
+                m_frame->SendProcessMessage(PID_RENDERER, msg);
 
                 m_callback->Success("工程加载成功");
             }
@@ -224,7 +225,7 @@ void MenuBarBinding::onRequestComplete(CefRefPtr<Callback> callback, CefURLReque
 }
 
 bool MenuBarBinding::onTaskLoadProject(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
-    if(!VolumeViewer::getInstance(frame).isLoaded()){
+    if(!VolumeViewer::isLoaded()){
         std::vector<CefString> filter={".lyp", ".lyp2", ".json"};
         CefRefPtr<CefRunFileDialogCallback> cbk = new FileDialogCallback(frame, callback);
         browser->GetHost()->RunFileDialog(FILE_DIALOG_OPEN, "Please select a project file", "", filter, cbk);
