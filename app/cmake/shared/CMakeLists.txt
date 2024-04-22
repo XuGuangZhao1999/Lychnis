@@ -24,8 +24,7 @@ set(SHARED_SRCS
   ../../include/shared/Entrypoint.hpp
   ../../src/shared/util/ResourceUtil.cpp
   ../../include/shared/util/ResourceUtil.hpp
-  ../../src/shared/util/Base64Encode.cpp
-  ../../include/shared/util/Base64Encode.hpp
+  ../../include/shared/util/BindingUtil.hpp
   )
 
 set(SHARED_SRCS_LINUX

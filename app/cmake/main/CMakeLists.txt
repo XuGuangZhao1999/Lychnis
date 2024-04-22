@@ -18,6 +18,8 @@ set(APP_SRCS
   ../../include/main/binding/FunctionFactory.hpp
   ../../src/main/binding/MenuBarBinding.cpp
   ../../include/main/binding/MenuBarBinding.hpp
+  ../../src/main/binding/ViewerPanelBinding.cpp
+  ../../include/main/binding/ViewerPanelBinding.hpp
   ../../src/main/net/RequestClient.cpp
   ../../include/main/net/RequestClient.hpp
   ../../src/main/binding/VolumeViewer.cpp

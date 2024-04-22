@@ -10,17 +10,23 @@ namespace app{
         class VolumeViewer : public VolumeViewerCore {
         private:
             // New data members
-            static std::atomic_bool bProject_ImageLoaded;
+            static bool bProject_ImageLoaded;
         
             // lychnis: ViewerPanel's data members
             LychnisReader* m_project;
+            static std::string m_imagePath2Load;
+            static std::string m_projectPath2Load;
 
             VolumeViewer(LychnisReader& reader);
             ~VolumeViewer();
+            void initViewer();
         public:
-            static VolumeViewer& getInstance(const std::string& path);
+            static VolumeViewer& getInstance();
             static bool isLoaded();
+            void setProjectPath(const std::string& path);
+            void setImagePath(const std::string& path);
             bool onLoadProject();
+            bool onOpenImage();
             bool onSaveProject(bool bSaveAs, std::string& projectPath);
 
             // Visual interaction event handlers

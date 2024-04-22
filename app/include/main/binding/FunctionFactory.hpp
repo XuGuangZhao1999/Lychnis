@@ -4,7 +4,6 @@
 #include <unordered_map>
 
 #include "include/wrapper/cef_message_router.h"
-#include "main/binding/MenuBarBinding.hpp"
 
 namespace app{
     namespace binding{
@@ -12,7 +11,7 @@ namespace app{
         template <class handlerImplement>
         class FunctionFactory{
             // Define a type to represent onTask*(...).
-            using taskFuncTemplate = bool (handlerImplement::*)(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, int64_t, const CefString&, bool, CefRefPtr<CefMessageRouterBrowserSide::Callback>);
+            using taskFuncTemplate = bool (handlerImplement::*)(CefRefPtr<CefBrowser>, CefRefPtr<CefFrame>, int64_t, CefRefPtr<CefDictionaryValue>, bool, CefRefPtr<CefMessageRouterBrowserSide::Callback>);
         public:
             void RegisterFunction(const std::string& name, taskFuncTemplate func){
                 factory[name] = func;

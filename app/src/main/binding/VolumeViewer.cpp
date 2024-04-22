@@ -15,23 +15,19 @@
 
 namespace app{
     namespace binding{
-        std::atomic_bool VolumeViewer::bProject_ImageLoaded = false;
+        bool VolumeViewer::bProject_ImageLoaded = false;
+        std::string VolumeViewer::m_imagePath2Load = "";
+        std::string VolumeViewer::m_projectPath2Load = "";
 
         VolumeViewer::VolumeViewer(LychnisReader& reader) : VolumeViewerCore(&reader) {
             m_project = &reader;
         }
 
         VolumeViewer::~VolumeViewer(){
+            bProject_ImageLoaded = false;
         }
 
-        bool VolumeViewer::onLoadProject(){
-            if(isLoaded()){
-                return true;
-            }
-
-            if(m_project->openImage() == false){
-                return false;
-            }
+        void VolumeViewer::initViewer(){
             bProject_ImageLoaded = true;
 
             cv::Size viewerSize(1600, 1200);
@@ -83,6 +79,17 @@ namespace app{
             }
             setVolume(buf, dims, spacing, origin, channels, true, false);
             setShowScaleBar(false);
+        }
+
+        bool VolumeViewer::onLoadProject(){
+            if(!m_project->load(m_projectPath2Load)){
+                return false;
+            }
+
+            if(!m_project->openImage()){
+                return false;
+            }
+            initViewer();
 
             return true;
         }
@@ -91,15 +98,36 @@ namespace app{
             return true;
         }
 
+        bool VolumeViewer::onOpenImage(){
+            if(!m_project->openImage(m_imagePath2Load)){
+                return false;
+            }
+            initViewer();
+
+            return true;
+        }
+
         bool VolumeViewer::isLoaded(){
             return bProject_ImageLoaded;
         }
 
-        VolumeViewer& VolumeViewer::getInstance(const std::string& path){
-            static LychnisReader reader(path);
+        VolumeViewer& VolumeViewer::getInstance(){
+            static LychnisReader reader;
             static VolumeViewer instance(reader);
 
             return instance;
+        }
+
+        void VolumeViewer::setProjectPath(const std::string& path){
+            if(!isLoaded()){
+                m_projectPath2Load = path;
+            }
+        }
+
+        void VolumeViewer::setImagePath(const std::string& path){
+            if(!isLoaded()){
+                m_imagePath2Load = path;
+            }
         }
     }// namespace binding
 }// namespace app

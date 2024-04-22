@@ -1,6 +1,7 @@
 #include "main/AppClient.hpp"
 #include "main/RequestDumpResourceProvider.hpp"
 #include "main/binding/MenuBarBinding.hpp"
+#include "main/binding/ViewerPanelBinding.hpp"
 #include "shared/AppConfig.hpp"
 #include "shared/util/ClientUtil.hpp"
 #include "shared/util/ResourceUtil.hpp"
@@ -38,6 +39,7 @@ void AppClient::OnAfterCreated(CefRefPtr<CefBrowser> browser)
         messageRouter = CefMessageRouterBrowserSide::Create(config);
 
         app::binding::MenuBarBinding::init(messageRouter);
+        app::binding::ViewerPanelBinding::init(messageRouter);
     }
 }
 
