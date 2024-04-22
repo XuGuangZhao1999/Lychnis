@@ -39,14 +39,7 @@ class FileDialogCallback : public CefRunFileDialogCallback{
                     vvInstance.onOpenImage();
                 }
                 
-                cv::Mat image = vvInstance.renderToImage(); 
-                
-                std::vector<uchar> tempBuf;
-                cv::imencode(".jpg", image, tempBuf);
-
-                CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
-                
-                shared::util::BindingUtil::paintEvent(m_frame, imageBinary);
+                shared::util::BindingUtil::paintEvent(m_frame, vvInstance);
 
                 m_callback->Success("图像加载成功");
             }

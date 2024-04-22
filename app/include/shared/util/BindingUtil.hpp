@@ -2,6 +2,10 @@
 
 #include "include/cef_frame.h"
 
+#include <opencv2/shape/shape_transformer.hpp>
+
+#include "main/binding/VolumeViewer.hpp"
+
 namespace shared
 {
 
@@ -12,7 +16,14 @@ class BindingUtil
 {
 
 public:
-    static void paintEvent(CefRefPtr<CefFrame> frame, CefRefPtr<CefBinaryValue> imageBinary){
+    static void paintEvent(CefRefPtr<CefFrame> frame, app::binding::VolumeViewer& viewer){
+        cv::Mat image = viewer.renderToImage(); 
+                
+        std::vector<uchar> tempBuf;
+        cv::imencode(".jpg", image, tempBuf);
+
+        CefRefPtr<CefBinaryValue> imageBinary = CefBinaryValue::Create(tempBuf.data(), tempBuf.size()*sizeof(uchar));
+
         CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Image");
         msg->GetArgumentList()->SetBinary(0, imageBinary);
         frame->SendProcessMessage(PID_RENDERER, msg);

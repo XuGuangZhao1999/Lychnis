@@ -16,10 +16,12 @@ set(APP_SRCS
   ../../src/main/RequestDumpResourceProvider.cpp
   ../../include/main/RequestDumpResourceProvider.hpp
   ../../include/main/binding/FunctionFactory.hpp
+  ../../include/shared/util/BindingUtil.hpp
   ../../src/main/binding/MenuBarBinding.cpp
   ../../include/main/binding/MenuBarBinding.hpp
   ../../src/main/binding/ViewerPanelBinding.cpp
   ../../include/main/binding/ViewerPanelBinding.hpp
+  ../../include/main/binding/FrontMouseEvent.hpp
   ../../src/main/net/RequestClient.cpp
   ../../include/main/net/RequestClient.hpp
   ../../src/main/binding/VolumeViewer.cpp

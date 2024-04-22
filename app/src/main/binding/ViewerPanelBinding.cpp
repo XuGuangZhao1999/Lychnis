@@ -1,6 +1,7 @@
 #include "main/binding/ViewerPanelBinding.hpp"
 #include "shared/AppConfig.hpp"
 #include "shared/util/BindingUtil.hpp"
+#include "main/binding/FrontMouseEvent.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -44,21 +45,37 @@ namespace app{
         }
 
         bool ViewerPanelBinding::onTaskMousePressEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            FrontMouseEvent e(args);
+            VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
+            viewer->mousePressEvent(&e1);
             
             return true;
         }
 
         bool ViewerPanelBinding::onTaskMouseMoveEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
-            
+            FrontMouseEvent e(args);
+            VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
+            viewer->mouseMoveEvent(&e1);
+
             return true;
         }
 
         bool ViewerPanelBinding::onTaskMouseReleaseEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            FrontMouseEvent e(args);
+            VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
+            viewer->mouseReleaseEvent(&e1);
 
             return true;
         }
 
         bool ViewerPanelBinding::onTaskWheelEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            VolumeViewerCore::MouseKeyEvent e1;
+            e1.m_angleDelta = args->GetInt("deltaY");
+            e1.m_x = args->GetDouble("posX");
+            e1.m_y = args->GetDouble("posY");
+            viewer->wheelEvent(&e1);
+            
+            shared::util::BindingUtil::paintEvent(frame, *viewer);
 
             return true;
         }
