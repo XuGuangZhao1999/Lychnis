@@ -34,10 +34,11 @@ namespace app{
                         break;
                     }
 
-                    if(args->GetBool("Shift")){
+                    CefRefPtr<CefDictionaryValue> FrontModifiers = args->GetDictionary("modifier");
+                    if(FrontModifiers->GetBool("Shift")){
                         modifiers |= Qt::ShiftModifier;
                     }
-                    if(args->GetBool("Control")){
+                    if(FrontModifiers->GetBool("Control")){
                         modifiers |= Qt::ControlModifier;
                     }
                 }
@@ -48,7 +49,7 @@ namespace app{
                     e.m_buttons = mouseButton;
                     e.m_x = x;
                     e.m_y = y;
-
+                    
                     return e;
                 }
         };

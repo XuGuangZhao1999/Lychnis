@@ -27,15 +27,7 @@ namespace app{
             void setImagePath(const std::string& path);
             bool onLoadProject();
             bool onOpenImage();
-            bool onSaveProject(bool bSaveAs, std::string& projectPath);
-
-            // Visual interaction event handlers
-            // void mousePressEvent(FrontMouseEvent* event);
-            // void mouseMoveEvent(FrontMouseEvent* event);
-            // void mouseReleaseEvent(FrontMouseEvent* event);
-            // void wheelEvent(FrontWheelEvent* event);
-            // void keyPressEvent(FrontKeyEvent* event);
-            // void keyReleaseEvent(FrontKeyEvent* event);
+            bool onSaveProject(std::string& projectPath, bool bSaveAs);
 
             DISALLOW_COPY_AND_ASSIGN(VolumeViewer);
         };

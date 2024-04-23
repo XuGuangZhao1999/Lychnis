@@ -94,7 +94,7 @@ namespace app{
             return true;
         }
 
-        bool VolumeViewer::onSaveProject(bool bSaveAs, std::string& projectPath){
+        bool VolumeViewer::onSaveProject(std::string& projectPath, bool bSaveAs){
             return true;
         }
 

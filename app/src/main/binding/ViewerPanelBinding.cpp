@@ -48,6 +48,8 @@ namespace app{
             FrontMouseEvent e(args);
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mousePressEvent(&e1);
+
+            shared::util::BindingUtil::paintEvent(frame, *viewer);
             
             return true;
         }
@@ -57,6 +59,8 @@ namespace app{
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mouseMoveEvent(&e1);
 
+            shared::util::BindingUtil::paintEvent(frame, *viewer);
+
             return true;
         }
 
@@ -64,6 +68,8 @@ namespace app{
             FrontMouseEvent e(args);
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mouseReleaseEvent(&e1);
+
+            shared::util::BindingUtil::paintEvent(frame, *viewer);
 
             return true;
         }
