@@ -21,6 +21,9 @@ namespace app{
 
         VolumeViewer::VolumeViewer(LychnisReader& reader) : VolumeViewerCore(&reader) {
             m_project = &reader;
+            for(auto it: m_blockSize){
+                it = 256;
+            }
         }
 
         VolumeViewer::~VolumeViewer(){
@@ -37,8 +40,9 @@ namespace app{
             QVariantMap projectInfo = m_project->m_loadedProjectInfo;
             importNodes(projectInfo, m_project->m_voxelSize, offset);
 
-            int levelSize = (m_project->m_imageReader->getLevelIndexes()).size();
-            auto level = m_project->m_imageReader->getLevel(levelSize / 2);
+            m_totalResolution = (m_project->m_imageReader->getLevelIndexes()).size();
+            m_currentResolution = m_totalResolution - 1;
+            auto level = m_project->m_imageReader->getLevel(m_currentResolution);
 
             double bounds[6];
             for (int i = 0; i < 3; i++) {
@@ -48,14 +52,19 @@ namespace app{
             }
             setBounds(bounds);
 
-            QList<ChannelBarInfo *> channelInfos;
             auto channelList = projectInfo["channels"].toList();
             const auto numChannels = level->dataIds[0].size();
             if (channelList.size() == numChannels) {
-                for (auto &channel : channelList) { channelInfos.append(new ChannelBarInfo(channel.toMap())); }
-            } else { for (int i = 0; i < numChannels; i++) { channelInfos.append(nullptr); }}
-            setChannelInfos(channelInfos);
+                for (auto &channel : channelList) { m_channelInfos.append(new ChannelBarInfo(channel.toMap())); }
+            } else { for (int i = 0; i < numChannels; i++) { m_channelInfos.append(nullptr); }}
+            setChannelInfos(m_channelInfos);
 
+            updateBlock();
+        }
+
+        void VolumeViewer::updateBlock(){
+            auto level = m_project->m_imageReader->getLevel(m_currentResolution);
+            const auto numChannels = level->dataIds[0].size();
             AutoBuffer buffer, singleChanBuffer, dstBuffer;
             size_t numVoxels = level->dims[2] * level->dims[1] * level->dims[0];
             auto singleChanBuf = (uint16_t *)singleChanBuffer.buffer(numVoxels * 2);
@@ -79,6 +88,10 @@ namespace app{
             }
             setVolume(buf, dims, spacing, origin, channels, true, false);
             setShowScaleBar(false);
+
+            m_center.x = m_volumeInfo->center[0];
+            m_center.y = m_volumeInfo->center[1];
+            m_center.z = m_volumeInfo->center[2];
         }
 
         bool VolumeViewer::onLoadProject(){
