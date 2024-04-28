@@ -200,6 +200,7 @@ if(OS_WINDOWS)
   # Ingore warning
   add_compile_options(/wd4456)
   add_compile_options(/wd4505)
+  add_compile_options(/wd4267)
 
   # Add resources to the sources variable for convenience
   set(APP_SRCS ${APP_SRCS} ${APP_RESOURCES_SRCS})
