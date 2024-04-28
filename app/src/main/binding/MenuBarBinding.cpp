@@ -31,6 +31,7 @@ class FileDialogCallback : public CefRunFileDialogCallback{
         void OnFileDialogDismissed (const std::vector< CefString > &file_paths){
             if(1 == file_paths.size()){
                 VolumeViewer& vvInstance = VolumeViewer::getInstance();
+                vvInstance.setFrame(m_frame);
                 if(m_bProject){
                     vvInstance.setProjectPath(file_paths[0]);
                     vvInstance.onLoadProject();
@@ -63,6 +64,7 @@ MenuBarBinding::MenuBarBinding(){
 
 bool MenuBarBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback)
 {
+    viewer->setFrame(frame);
     // Only handle messages from application url
     const std::string &url = frame->GetURL();
 

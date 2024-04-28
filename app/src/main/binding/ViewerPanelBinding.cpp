@@ -2,6 +2,7 @@
 #include "shared/AppConfig.hpp"
 #include "shared/util/BindingUtil.hpp"
 #include "main/binding/FrontMouseEvent.hpp"
+#include "main/binding/FrontKeyEvent.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -24,6 +25,8 @@ namespace app{
         }
 
         bool ViewerPanelBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
+            viewer->setFrame(frame);
+
             // Only handle messages from application url
             const std::string &url = frame->GetURL();
 
@@ -49,7 +52,7 @@ namespace app{
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mousePressEvent(&e1);
 
-            shared::util::BindingUtil::paintEvent(frame, *viewer);
+            // shared::util::BindingUtil::paintEvent(frame, *viewer);
             
             return true;
         }
@@ -59,7 +62,7 @@ namespace app{
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mouseMoveEvent(&e1);
 
-            shared::util::BindingUtil::paintEvent(frame, *viewer);
+            // shared::util::BindingUtil::paintEvent(frame, *viewer);
 
             return true;
         }
@@ -69,7 +72,7 @@ namespace app{
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->mouseReleaseEvent(&e1);
 
-            shared::util::BindingUtil::paintEvent(frame, *viewer);
+            // shared::util::BindingUtil::paintEvent(frame, *viewer);
 
             return true;
         }
@@ -81,7 +84,23 @@ namespace app{
             e1.m_y = args->GetDouble("posY");
             viewer->wheelEvent(&e1);
             
-            shared::util::BindingUtil::paintEvent(frame, *viewer);
+            // shared::util::BindingUtil::paintEvent(frame, *viewer);
+
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskKeyPressEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            FrontKeyEvent e(args);
+            VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
+            viewer->keyPressEvent(&e1);
+
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskKeyReleaseEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            FrontKeyEvent e(args);
+            VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
+            viewer->keyPressEvent(&e1);
 
             return true;
         }

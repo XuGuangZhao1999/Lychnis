@@ -22,6 +22,7 @@ set(APP_SRCS
   ../../src/main/binding/ViewerPanelBinding.cpp
   ../../include/main/binding/ViewerPanelBinding.hpp
   ../../include/main/binding/FrontMouseEvent.hpp
+  ../../include/main/binding/FrontKeyEvent.hpp
   ../../src/main/net/RequestClient.cpp
   ../../include/main/net/RequestClient.hpp
   ../../src/main/binding/VolumeViewer.cpp

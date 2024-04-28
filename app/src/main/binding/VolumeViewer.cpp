@@ -1,4 +1,5 @@
 #include "main/binding/VolumeViewer.hpp"
+#include "shared/util/BindingUtil.hpp"
 
 #include <commdlg.h>
 #include <tchar.h>
@@ -58,6 +59,7 @@ namespace app{
                 for (auto &channel : channelList) { m_channelInfos.append(new ChannelBarInfo(channel.toMap())); }
             } else { for (int i = 0; i < numChannels; i++) { m_channelInfos.append(nullptr); }}
             setChannelInfos(m_channelInfos);
+            setShowScaleBar(false);
 
             updateBlock();
         }
@@ -87,11 +89,14 @@ namespace app{
                 origin[i] = (double)start[2 - i] * spacing[i] + ((double *)&m_project->m_origin)[i];
             }
             setVolume(buf, dims, spacing, origin, channels, true, false);
-            setShowScaleBar(false);
 
             m_center.x = m_volumeInfo->center[0];
             m_center.y = m_volumeInfo->center[1];
             m_center.z = m_volumeInfo->center[2];
+        }
+
+        void VolumeViewer::updateScreen(){
+            shared::util::BindingUtil::paintEvent(m_frame, *this);
         }
 
         bool VolumeViewer::onLoadProject(){
@@ -140,6 +145,12 @@ namespace app{
         void VolumeViewer::setImagePath(const std::string& path){
             if(!isLoaded()){
                 m_imagePath2Load = path;
+            }
+        }
+
+        void VolumeViewer::setFrame(CefRefPtr<CefFrame> frame){
+            if(m_frame == nullptr){
+                m_frame = frame;
             }
         }
     }// namespace binding
