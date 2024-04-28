@@ -29,6 +29,7 @@ namespace app{
 
         VolumeViewer::~VolumeViewer(){
             bProject_ImageLoaded = false;
+            (void)m_frame.release();
         }
 
         void VolumeViewer::initViewer(){

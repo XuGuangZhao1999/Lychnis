@@ -53,7 +53,7 @@ namespace app{
             viewer->mousePressEvent(&e1);
 
             // shared::util::BindingUtil::paintEvent(frame, *viewer);
-            
+            callback->Success("Success");
             return true;
         }
 
@@ -63,7 +63,7 @@ namespace app{
             viewer->mouseMoveEvent(&e1);
 
             // shared::util::BindingUtil::paintEvent(frame, *viewer);
-
+            callback->Success("Success");
             return true;
         }
 
@@ -73,7 +73,7 @@ namespace app{
             viewer->mouseReleaseEvent(&e1);
 
             // shared::util::BindingUtil::paintEvent(frame, *viewer);
-
+            callback->Success("Success");
             return true;
         }
 
@@ -85,7 +85,7 @@ namespace app{
             viewer->wheelEvent(&e1);
             
             // shared::util::BindingUtil::paintEvent(frame, *viewer);
-
+            callback->Success("Success");
             return true;
         }
 

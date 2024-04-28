@@ -14,12 +14,12 @@ namespace app{
 
         class FrontKeyEvent{
             private:
-                Qt::Key m_key;
+                Qt::Key key;
                 Qt::KeyboardModifiers modifiers{Qt::NoModifier};
-                bool m_bAutoRepeat;
+                bool bAutoRepeat;
             public:
                 explicit FrontKeyEvent(CefRefPtr<CefDictionaryValue> args){
-                    m_key = keyTable[args->GetInt("key")];
+                    key = keyTable[args->GetInt("key")];
 
                     CefRefPtr<CefDictionaryValue> FrontModifiers = args->GetDictionary("modifier");
                     if(FrontModifiers->GetBool("Shift")){
@@ -29,14 +29,14 @@ namespace app{
                         modifiers |= Qt::ControlModifier;
                     }
 
-                    m_bAutoRepeat = args->GetBool("bAutoRepeat");
+                    bAutoRepeat = args->GetBool("bAutoRepeat");
                 }
 
                 VolumeViewerCore::MouseKeyEvent eventConvert(){
                     VolumeViewerCore::MouseKeyEvent e;
                     e.m_modifiers = modifiers;
-                    e.m_key = m_key;
-                    e.m_bAutoRepeat = m_bAutoRepeat;
+                    e.m_key = key;
+                    e.m_bAutoRepeat = bAutoRepeat;
 
                     return e;
                 }
