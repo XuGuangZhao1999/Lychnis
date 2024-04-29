@@ -43,7 +43,7 @@ namespace app{
             importNodes(projectInfo, m_project->m_voxelSize, offset);
 
             m_totalResolution = (m_project->m_imageReader->getLevelIndexes()).size();
-            m_currentResolution = m_totalResolution - 1;
+            m_currentResolution = m_totalResolution / 2;
             auto level = m_project->m_imageReader->getLevel(m_currentResolution);
 
             double bounds[6];

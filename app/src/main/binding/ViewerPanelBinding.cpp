@@ -22,6 +22,8 @@ namespace app{
             tasks.RegisterFunction("mouseMoveEvent", &ViewerPanelBinding::onTaskMouseMoveEvent);
             tasks.RegisterFunction("mouseReleaseEvent", &ViewerPanelBinding::onTaskMouseReleaseEvent);
             tasks.RegisterFunction("wheelEvent", &ViewerPanelBinding::onTaskWheelEvent);
+            tasks.RegisterFunction("keyPressEvent", &ViewerPanelBinding::onTaskKeyPressEvent);
+            tasks.RegisterFunction("keyReleaseEvent", &ViewerPanelBinding::onTaskKeyReleaseEvent);
         }
 
         bool ViewerPanelBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
@@ -94,14 +96,16 @@ namespace app{
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
             viewer->keyPressEvent(&e1);
 
+            callback->Success("Success");
             return true;
         }
 
         bool ViewerPanelBinding::onTaskKeyReleaseEvent(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
             FrontKeyEvent e(args);
             VolumeViewerCore::MouseKeyEvent e1 = e.eventConvert();
-            viewer->keyPressEvent(&e1);
+            viewer->keyReleaseEvent(&e1); 
 
+            callback->Success("Success");
             return true;
         }
         
