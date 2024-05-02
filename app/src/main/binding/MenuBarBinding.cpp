@@ -90,6 +90,8 @@ bool MenuBarBinding::onTaskLoadProject(CefRefPtr<CefBrowser> browser, CefRefPtr<
         std::vector<CefString> filter={".lyp", ".lyp2", ".json"};
         CefRefPtr<CefRunFileDialogCallback> cbk = new FileDialogCallback(frame, callback, true);
         browser->GetHost()->RunFileDialog(FILE_DIALOG_OPEN, "Please select a project file", "", filter, cbk);
+    }else{
+        callback->Success("The app has loaded an image.");
     }
 
     return true;
@@ -124,6 +126,8 @@ bool MenuBarBinding::onTaskOpenImage(CefRefPtr<CefBrowser> browser, CefRefPtr<Ce
         std::vector<CefString> filter = {".lym", ".ims", ".h5", ".json"};
         CefRefPtr<CefRunFileDialogCallback> cbk = new FileDialogCallback(frame, callback, false);
         browser->GetHost()->RunFileDialog(FILE_DIALOG_OPEN, "Please select a image file", "", filter, cbk);
+    }else{
+        callback->Success("The app has loaded an image.");
     }
 
     return true;
