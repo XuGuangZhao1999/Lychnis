@@ -23,14 +23,17 @@ namespace app{
             ImportNodesInfo* m_nodesPath2Load{nullptr};
 
             // Volume Information
-            int m_totalResolution, m_currentResolution;
+            int m_totalResolutions, m_currentResolution;
             int m_blockSize[3]{};
             cv::Point3i m_center;
             QList<ChannelBarInfo *> m_channelInfos;
+            int m_currentChannel{0};
+            cv::Point2i m_worldRange{100, 1000};
 
             VolumeViewer(LychnisReader& reader);
             ~VolumeViewer();
             bool initViewer();
+            void importNodes();
             bool openImageFile();
             void updateBlock();
             void setChannels(const QStringList &names, const QList<cv::Point3d> &colors);
@@ -45,6 +48,8 @@ namespace app{
         protected:
             void updateScreen() override;
             void fristChangeCurrentNode(LychnisNode *);
+            void sendVisualInfo();
+            void keyPressKernel(int) override;
         public:
             static VolumeViewer& getInstance();
             static bool isLoaded();
@@ -54,7 +59,11 @@ namespace app{
             bool onLoadProject();
             bool onOpenImage();
             bool onSaveProject(std::string& projectPath, bool bSaveAs);
+
             void updateResolution(int resId);
+            void updateChannel(int channelId, int lower, int upper);
+            void updateBlockSize(int x, int y, int z);
+            void updateCenter(int x, int y, int z);
 
             IMPLEMENT_REFCOUNTING(VolumeViewer);
             DISALLOW_COPY_AND_ASSIGN(VolumeViewer);

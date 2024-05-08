@@ -24,6 +24,8 @@ namespace app{
             tasks.RegisterFunction("wheelEvent", &ViewerPanelBinding::onTaskWheelEvent);
             tasks.RegisterFunction("keyPressEvent", &ViewerPanelBinding::onTaskKeyPressEvent);
             tasks.RegisterFunction("keyReleaseEvent", &ViewerPanelBinding::onTaskKeyReleaseEvent);
+            
+            tasks.RegisterFunction("updateResolution", &ViewerPanelBinding::onTaskUpdateResolution);
         }
 
         bool ViewerPanelBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
@@ -106,6 +108,29 @@ namespace app{
             viewer->keyReleaseEvent(&e1); 
 
             callback->Success("Success");
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskUpdateBlockSize(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskUpdateCenter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskUpdateResolution(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            int resId = args->GetInt("resId") - 1;
+            viewer->updateResolution(resId);
+
+            callback->Success("Success");
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskUpdateChannel(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            
             return true;
         }
         

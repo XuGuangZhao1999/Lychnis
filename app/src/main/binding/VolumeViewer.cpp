@@ -1,5 +1,6 @@
 #include "main/binding/VolumeViewer.hpp"
 #include "shared/util/BindingUtil.hpp"
+#include "include/cef_parser.h"
 
 #include <commdlg.h>
 #include <tchar.h>
@@ -44,9 +45,6 @@ namespace app{
         VolumeViewer::~VolumeViewer(){
             bProject_ImageLoaded = false;
             (void)m_frame.release();
-            if(nullptr != m_nodesPath2Load){
-                delete m_nodesPath2Load;
-            }
         }
 
         bool VolumeViewer::initViewer(){
@@ -76,6 +74,7 @@ namespace app{
             }
 
             bool bProjectValid = !m_project->m_projectPath.empty();
+            importNodes();
 
             auto rawLevel = reader->getLevel(0);
 
@@ -122,6 +121,9 @@ namespace app{
 
                 double center[] = {rx.x() - 1., -1, -1};
                 if(bUpdateCenter){memcpy(center, m_project->m_center, sizeof(m_project->m_center));}
+                m_center.x = m_project->m_center[0];
+                m_center.y = m_project->m_center[1];
+                m_center.z = m_project->m_center[2];
 
                 double bounds[] = {(double)rx.x(), (double)rx.y(), (double)ry.x(), (double)ry.y(), (double)rz.x(), (double)rz.y()};
 	            setBounds(bounds);
@@ -171,6 +173,8 @@ namespace app{
                 setChannels({"C1", "C2"}, colors);
             }
 
+            m_totalResolutions = m_project->m_imageReader->getLevelIndexes().length();
+
             // Todo: remove these magic numbers
             if (m_project->m_dims[2] == 1) {
                 setCameraDirection({0, 0, -1}, {0, -1, 0}, true);
@@ -187,8 +191,10 @@ namespace app{
                 for (int &i : m_blockSize) { i = 512; }
             }
 
+            m_currentResolution = resId;
             updateResolution(resId);
             updateBlock();
+            sendVisualInfo();
 
             return true;
         }
@@ -225,6 +231,7 @@ namespace app{
 
             if (m_project->m_bSplitSlices) { channels.append(m_project->m_currentChannel); }
             else {
+                m_channelInfos.clear();
                 getChannelInfos(m_channelInfos);
                 for (int i = 0; i < m_project->m_channelNumber; i++) {
                 if (m_channelInfos[i]->bVisible) { channels.append(i); }
@@ -470,6 +477,83 @@ namespace app{
             // updateScreen();
         }
 
+        void VolumeViewer::sendVisualInfo(){
+            auto resInfo = CefDictionaryValue::Create();
+            resInfo->SetInt("totalResolutions", m_totalResolutions);
+            resInfo->SetInt("currentResolution", m_currentResolution);
+
+            auto centerInfo = CefDictionaryValue::Create();
+            centerInfo->SetInt("x", m_center.x);
+            centerInfo->SetInt("y", m_center.y);
+            centerInfo->SetInt("z", m_center.z);
+
+            auto blockSizeInfo = CefDictionaryValue::Create();
+            blockSizeInfo->SetInt("xy", m_blockSize[0]);
+            blockSizeInfo->SetInt("z", m_blockSize[2]);
+
+            auto infos = CefDictionaryValue::Create();
+            infos->SetDictionary("res", resInfo);
+            infos->SetDictionary("center", centerInfo);
+            infos->SetDictionary("blockSize", blockSizeInfo);
+            
+            auto temp = CefValue::Create();
+            temp->SetDictionary(infos);
+            auto msgData = CefWriteJSON(temp, JSON_WRITER_DEFAULT);
+
+            auto msg = CefProcessMessage::Create("Infos");
+            auto args = msg->GetArgumentList();
+            args->SetString(0, msgData);
+
+            m_frame->SendProcessMessage(PID_RENDERER, msg);
+        }
+
+        void VolumeViewer::keyPressKernel(int key){
+            Common *c = Common::i();
+            if (nullptr == m_volumeInfo) { return; }
+
+            //  MutexTryLocker locker(&m_nodesMutex);
+            //  if (!locker.tryLock()) { return; }
+
+            switch (key) {
+                case Qt::Key_Z: { g_bVolumePicking = true; }
+                break;
+                case Qt::Key_X: { g_bPropPicking = true; }
+                break;
+                case Qt::Key_V: { toggleShowNodes(true); }
+                break;
+                case Qt::Key_F: { findNextNode(); }
+                break;
+                case Qt::Key_B: { moveSliceByNode(); }
+                break;
+            //    case KeyEvent::Key::P:{generateSurfaceNodes();}break;
+            //    case KeyEvent::Key::G:{m_viewer->grabFramebuffer().save("d:/lufeng/tmp/res.png");}break;
+
+                case Qt::Key_Home:
+                case Qt::Key_End:
+                case Qt::Key_Up:
+                case Qt::Key_Down: {
+                traverseNode(key, false);
+                break;
+                }
+
+                case Qt::Key_Delete: { deleteCurrentNode(); }
+                break;
+                case Qt::Key_Escape: { if (nullptr != m_projectPtr->m_nodesManager.m_currentNode) { changeCurrentNode(nullptr); }}
+                break;
+                case Qt::Key_Space: {
+                if (nullptr != m_projectPtr->m_nodesManager.m_currentNode) {
+                    auto p = m_projectPtr->m_nodesManager.m_currentNode;
+                    emit centerUpdated(p->pos[0], p->pos[1], p->pos[2]);
+                    updateCenter(p->pos[0], p->pos[1], p->pos[2]);
+                } else {
+                    emit
+                    c->volumeReload();
+                }
+                }
+                break;
+            }
+        }
+
         bool VolumeViewer::onLoadProject(){
             if(!m_project->load(m_projectPath2Load)){
                 return false;
@@ -493,6 +577,61 @@ namespace app{
             return true;
         }
 
+        void VolumeViewer::importNodes(){
+            auto protoPtr = m_projectProto2Load;
+            if (nullptr != protoPtr) {
+                auto dp = protoPtr->m_origin - m_project->m_origin;
+                importNodesProto(protoPtr->m_loadedProjectInfo, protoPtr->m_voxelSize, dp, protoPtr->m_loadedProto);
+            }
+
+            auto pathPtr = m_nodesPath2Load;
+            if (nullptr == pathPtr) { return; }
+            auto paths = pathPtr->paths;//QString::fromStdString(*pathPtr).split("\n");
+            g_mergeRadius = pathPtr->bMerge ? 1E-6 : -1;
+            delete pathPtr;
+
+            auto c = Common::i();
+            int index = 0;
+            for (auto &path : paths) {
+                auto progressStr = QString(" (%1/%2) ").arg(QString::number(++index), QString::number(paths.size()));
+                emit c->showMessage(tr("Importing nodes") + progressStr + "...");
+
+                QVariantMap params;
+                bool bLoaded{false};
+                void *ptr{nullptr};
+                if (path.endsWith(".lypb")) {
+                ptr = LychnisProjectReader::loadNodesProto(path.toStdString(), params);
+                bLoaded = nullptr != ptr;
+                } else if (path.endsWith(".lyp") || path.endsWith(".json")) {
+                bLoaded = Util::loadJson(path, params);
+                } else if (path.endsWith(".swc")) { if (!importNodesSWC(path)) { return; } else { continue; }}
+
+                if (!bLoaded) {
+                emit c->showMessage(tr("Unable to load file ") + path, 3000);
+                return;
+                }
+
+                bool bOK;
+                cv::Point3d voxelSize;
+                if (!LychnisProjectReader::loadVoxelSize(params, voxelSize)) {
+                emit c->showMessage("", 100);
+                return;
+                }
+
+                cv::Point3d origin, dp;
+                bOK = Util::string2Point(params["origin"].toString(), origin);
+                if (bOK) { dp = origin - cv::Point3d(m_project->m_origin); }
+
+                if (nullptr == ptr) { VolumeViewerCore::importNodes(params, voxelSize, (double *)&dp); }
+                else { importNodesProto(params, voxelSize, dp, ptr); }
+            }
+
+            emit nodeImported();
+            emit c->showMessage(tr("Nodes imported"), 500);
+            // double offset[] = {0, 0, 0};
+            // VolumeViewerCore::importNodes(m_project->m_loadedProjectInfo, m_project->m_voxelSize, offset);
+        }
+
         void VolumeViewer::updateResolution(int resId){
             if(resId < 0){return;}
             m_currentResolution = resId;
@@ -503,7 +642,48 @@ namespace app{
                 if (nullptr == p) {
                     return;
                 }
-            } 
+            }
+
+            updateBlock();
+        }
+
+        void VolumeViewer::updateChannel(int channelId, int lower, int upper){
+            if (channelId >= 0) {
+                m_currentChannel = channelId;
+                m_project->m_currentChannel = m_currentChannel - 1;
+            }
+            cv::Point2i *pRange = new cv::Point2i(lower, upper);
+            if (nullptr != pRange) {
+                if (nullptr != m_project->m_imageReader) {
+                if (m_project->m_currentChannel >= 0 && pRange->y > pRange->x && pRange->x >= 0) {
+                    m_project->m_imageReader->setChannelDisplayRange(-m_project->m_currentChannel, pRange->x, pRange->y);
+                    m_worldRange = *pRange;
+                }
+                }
+                delete pRange;
+            }
+
+            updateBlock();
+        }
+
+        void VolumeViewer::updateBlockSize(int x, int y, int z){
+            m_blockSize[0] = x;
+            m_blockSize[1] = y;
+            m_blockSize[2] = z;
+
+            updateBlock();
+        }
+
+        void VolumeViewer::updateCenter(int x, int y, int z){
+            m_project->m_center[0] = x;
+            m_project->m_center[1] = y;
+            m_project->m_center[2] = z;
+
+            m_center.x = x;
+            m_center.y = y;
+            m_center.z = z;
+
+            updateBlock();
         }
 
         bool VolumeViewer::onOpenImage(){
