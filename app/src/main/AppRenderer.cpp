@@ -86,7 +86,7 @@ bool RendererApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRef
         auto msg = CefV8Value::CreateString(args->GetString(0));
         
         CefRefPtr<CefV8Value> global = context->GetGlobal();
-        CefRefPtr<CefV8Value> paintFunction = global->GetValue("getInfos");
+        CefRefPtr<CefV8Value> paintFunction = global->GetValue("setInfos");
 
         if(paintFunction.get() && paintFunction->IsFunction()){
             CefV8ValueList args;

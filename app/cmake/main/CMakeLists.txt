@@ -21,6 +21,8 @@ set(APP_SRCS
   ../../include/main/binding/MenuBarBinding.hpp
   ../../src/main/binding/ViewerPanelBinding.cpp
   ../../include/main/binding/ViewerPanelBinding.hpp
+  ../../src/main/binding/AnnotationPanelBinding.cpp
+  ../../include/main/binding/AnnotationPanelBinding.hpp
   ../../include/main/binding/FrontMouseEvent.hpp
   ../../include/main/binding/FrontKeyEvent.hpp
   ../../src/main/net/RequestClient.cpp

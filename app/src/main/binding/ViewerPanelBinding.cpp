@@ -26,6 +26,9 @@ namespace app{
             tasks.RegisterFunction("keyReleaseEvent", &ViewerPanelBinding::onTaskKeyReleaseEvent);
             
             tasks.RegisterFunction("updateResolution", &ViewerPanelBinding::onTaskUpdateResolution);
+            tasks.RegisterFunction("updateChannelColor", &ViewerPanelBinding::onTaskUpdateChannelColor);
+            tasks.RegisterFunction("updateChannelVisibility", &ViewerPanelBinding::onTaskUpdateChannelVisibility);
+            tasks.RegisterFunction("updateChannelContrast",&ViewerPanelBinding::onTaskUpdateChannelContrast);
         }
 
         bool ViewerPanelBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
@@ -111,11 +114,6 @@ namespace app{
             return true;
         }
 
-        bool ViewerPanelBinding::onTaskUpdateBlockSize(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
-            
-            return true;
-        }
-
         bool ViewerPanelBinding::onTaskUpdateCenter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
             
             return true;
@@ -133,7 +131,28 @@ namespace app{
             
             return true;
         }
+
+        bool ViewerPanelBinding::onTaskUpdateChannelColor(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            viewer->updateChannelColor(args->GetInt("index"), args->GetInt("r")/255.0, args->GetInt("g")/255.0, args->GetInt("b")/255.0, args->GetDouble("gamma"));
+
+            callback->Success("Success");
+            return true;
+        }
+
+        bool ViewerPanelBinding::onTaskUpdateChannelVisibility(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            viewer->updateChannelVisibility(args->GetInt("index"), args->GetBool("visible"));
+
+            callback->Success("Success");
+            return true;
+        }
         
+        bool ViewerPanelBinding::onTaskUpdateChannelContrast(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            viewer->updateChannelContrast(args->GetInt("lower"), args->GetInt("upper"));
+
+            callback->Success("Success");
+            return true;
+        }
+
         void ViewerPanelBinding::init(CefRefPtr<CefMessageRouterBrowserSide> router){
             router->AddHandler(new ViewerPanelBinding(), false);
         }

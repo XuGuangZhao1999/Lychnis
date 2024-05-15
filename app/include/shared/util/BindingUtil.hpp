@@ -29,9 +29,15 @@ public:
         frame->SendProcessMessage(PID_RENDERER, msg);
     }
 
-    static void showMessage(CefRefPtr<CefFrame> frame, CefString message){
+    static void showMessage(CefRefPtr<CefFrame> frame, CefString& message){
         CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Message");
         msg->GetArgumentList()->SetString(0, message);
+        frame->SendProcessMessage(PID_RENDERER, msg);
+    }
+
+    static void setInfos(CefRefPtr<CefFrame> frame, CefString& infos){
+        CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("Infos");
+        msg->GetArgumentList()->SetString(0, infos);
         frame->SendProcessMessage(PID_RENDERER, msg);
     }
 };

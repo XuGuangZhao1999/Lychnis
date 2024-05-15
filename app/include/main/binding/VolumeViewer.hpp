@@ -14,7 +14,9 @@ namespace app{
             // New data members
             static bool bProject_ImageLoaded;
             CefRefPtr<CefFrame> m_frame{nullptr};
-        
+            bool bResUpdated{false};
+            int visableChannelCount{0};
+
             // lychnis: ViewerPanel's data members
             LychnisReader* m_project{nullptr};
             static std::string m_imagePath2Load;
@@ -64,6 +66,11 @@ namespace app{
             void updateChannel(int channelId, int lower, int upper);
             void updateBlockSize(int x, int y, int z);
             void updateCenter(int x, int y, int z);
+            void updateChannelColor(int index, double r, double g, double b, double gamma);
+            void updateChannelVisibility(int index, bool bVisible);
+            void updateChannelContrast(int lower, int upper);
+
+            bool pickVolume(int x, int y) override;
 
             IMPLEMENT_REFCOUNTING(VolumeViewer);
             DISALLOW_COPY_AND_ASSIGN(VolumeViewer);

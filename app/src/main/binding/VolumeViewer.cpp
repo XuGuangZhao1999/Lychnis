@@ -194,7 +194,9 @@ namespace app{
             m_currentResolution = resId;
             updateResolution(resId);
             updateBlock();
+
             sendVisualInfo();
+            visableChannelCount = m_channelInfos.size();
 
             return true;
         }
@@ -306,6 +308,7 @@ namespace app{
                 }
             }
             setChannelInfos(infos);
+            getChannelInfos(m_channelInfos);
         }
 
         bool VolumeViewer::loadBlock(LevelInfo *p, size_t start[], size_t block[], double spacing[], const QList<int> &channels, void *buffer, uint16_t *buffer2){
@@ -488,23 +491,33 @@ namespace app{
             centerInfo->SetInt("z", m_center.z);
 
             auto blockSizeInfo = CefDictionaryValue::Create();
-            blockSizeInfo->SetInt("xy", m_blockSize[0]);
-            blockSizeInfo->SetInt("z", m_blockSize[2]);
+            blockSizeInfo->SetInt("width", m_blockSize[0]);
+            blockSizeInfo->SetInt("height", m_blockSize[2]);
+
+            auto channelInfos = CefListValue::Create();
+            for(auto it : m_channelInfos){
+                QVariantMap channelInfo = it->toMap();
+                auto temp = CefDictionaryValue::Create();
+                temp->SetString("position", channelInfo["position"].toString().toStdString());
+                temp->SetString("color", channelInfo["color"].toString().toStdString());
+                temp->SetString("contrast", channelInfo["contrast"].toString().toStdString());
+                temp->SetInt("index", channelInfo["index"].toInt());
+                temp->SetDouble("gamma", channelInfo["gamma"].toDouble());
+                temp->SetBool("visible", channelInfo["visible"].toBool());
+                channelInfos->SetDictionary(temp->GetInt("index"), temp);                
+            }
 
             auto infos = CefDictionaryValue::Create();
-            infos->SetDictionary("res", resInfo);
-            infos->SetDictionary("center", centerInfo);
-            infos->SetDictionary("blockSize", blockSizeInfo);
+            infos->SetDictionary("Resolution", resInfo);
+            infos->SetDictionary("Center", centerInfo);
+            infos->SetDictionary("BlockSize", blockSizeInfo);
+            infos->SetList("Channels", channelInfos);
             
             auto temp = CefValue::Create();
             temp->SetDictionary(infos);
             auto msgData = CefWriteJSON(temp, JSON_WRITER_DEFAULT);
 
-            auto msg = CefProcessMessage::Create("Infos");
-            auto args = msg->GetArgumentList();
-            args->SetString(0, msgData);
-
-            m_frame->SendProcessMessage(PID_RENDERER, msg);
+            shared::util::BindingUtil::setInfos(m_frame, msgData);
         }
 
         void VolumeViewer::keyPressKernel(int key){
@@ -628,8 +641,6 @@ namespace app{
 
             emit nodeImported();
             emit c->showMessage(tr("Nodes imported"), 500);
-            // double offset[] = {0, 0, 0};
-            // VolumeViewerCore::importNodes(m_project->m_loadedProjectInfo, m_project->m_voxelSize, offset);
         }
 
         void VolumeViewer::updateResolution(int resId){
@@ -644,6 +655,7 @@ namespace app{
                 }
             }
 
+            bResUpdated = true;
             updateBlock();
         }
 
@@ -684,6 +696,43 @@ namespace app{
             m_center.z = z;
 
             updateBlock();
+        }
+
+        void VolumeViewer::updateChannelColor(int index, double r, double g, double b, double gamma){
+            setColor(index, r, g, b, gamma);
+            onRender(false);
+        }
+
+        void VolumeViewer::updateChannelVisibility(int index, bool bVisible){
+            showHideChannel(index, bVisible);
+            onRender(false);
+            auto channelSize = m_channelInfos.size();
+            if(bVisible){
+                if(bResUpdated && visableChannelCount<channelSize){
+                    updateBlock();
+                }else if(visableChannelCount == channelSize){
+                    bResUpdated = false;
+                }
+                ++visableChannelCount;
+            }else{
+                --visableChannelCount;
+            }
+        }
+
+        void VolumeViewer::updateChannelContrast(int lower, int upper){
+            for(int i=0; i<m_channelInfos.size(); ++i){
+                onContrastChanged(i, lower, upper, m_project->m_bAnnotation);
+            }
+            onRender(false);
+        }
+
+        bool VolumeViewer::pickVolume(int x, int y){
+             double pos[3];
+            if (pickPos(x, y, pos)) {
+                // VolumeViewerCore::pickVolume(pos[0], pos[1], pos[2]);
+                updateCenter(pos[0], pos[1], pos[2]);
+                return true;
+            } else { return false; }
         }
 
         bool VolumeViewer::onOpenImage(){
