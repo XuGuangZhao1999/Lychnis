@@ -364,6 +364,8 @@ namespace app{
                 for (size_t j = 0; j < num; j++, pBuffer2++, pBuffer += channelNumber) { *pBuffer = *pBuffer2; }
 
             }
+
+            sendVisualInfo();
             return bOK;
         }
 
