@@ -27,7 +27,6 @@ namespace app{
             // Volume Information
             int m_totalResolutions, m_currentResolution;
             int m_blockSize[3]{};
-            cv::Point3i m_center;
             QList<ChannelBarInfo *> m_channelInfos;
             int m_currentChannel{0};
             cv::Point2i m_worldRange{100, 1000};

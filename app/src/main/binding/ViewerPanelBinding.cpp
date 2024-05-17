@@ -114,11 +114,6 @@ namespace app{
             return true;
         }
 
-        bool ViewerPanelBinding::onTaskUpdateCenter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
-            
-            return true;
-        }
-
         bool ViewerPanelBinding::onTaskUpdateResolution(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
             int resId = args->GetInt("resId") - 1;
             viewer->updateResolution(resId);

@@ -59,11 +59,6 @@ namespace app{
             callback->Success("Success");
             return true;
         }
-
-        bool AnnotationPanelBinding::onTaskUpdateChannel(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
-            
-            return true;
-        }
         
         void AnnotationPanelBinding::init(CefRefPtr<CefMessageRouterBrowserSide> router){
             router->AddHandler(new AnnotationPanelBinding(), false);

@@ -121,9 +121,6 @@ namespace app{
 
                 double center[] = {rx.x() - 1., -1, -1};
                 if(bUpdateCenter){memcpy(center, m_project->m_center, sizeof(m_project->m_center));}
-                m_center.x = m_project->m_center[0];
-                m_center.y = m_project->m_center[1];
-                m_center.z = m_project->m_center[2];
 
                 double bounds[] = {(double)rx.x(), (double)rx.y(), (double)ry.x(), (double)ry.y(), (double)rz.x(), (double)rz.y()};
 	            setBounds(bounds);
@@ -195,7 +192,6 @@ namespace app{
             updateResolution(resId);
             updateBlock();
 
-            sendVisualInfo();
             visableChannelCount = m_channelInfos.size();
 
             return true;
@@ -280,6 +276,7 @@ namespace app{
 
             sendBlock2Viewer(buffer, origin, block, spacing, channels);
             emit c->showMessage(tr("Image loaded"), 500);
+            sendVisualInfo();
         }
 
         void VolumeViewer::setChannels(const QStringList &names, const QList<cv::Point3d> &colors){
@@ -365,7 +362,6 @@ namespace app{
 
             }
 
-            sendVisualInfo();
             return bOK;
         }
 
@@ -488,9 +484,9 @@ namespace app{
             resInfo->SetInt("currentResolution", m_currentResolution);
 
             auto centerInfo = CefDictionaryValue::Create();
-            centerInfo->SetInt("x", m_center.x);
-            centerInfo->SetInt("y", m_center.y);
-            centerInfo->SetInt("z", m_center.z);
+            centerInfo->SetInt("x", m_volumeInfo->center[0]);
+            centerInfo->SetInt("y", m_volumeInfo->center[1]);
+            centerInfo->SetInt("z", m_volumeInfo->center[2]);
 
             auto blockSizeInfo = CefDictionaryValue::Create();
             blockSizeInfo->SetInt("width", m_blockSize[0]);
@@ -692,10 +688,6 @@ namespace app{
             m_project->m_center[0] = x;
             m_project->m_center[1] = y;
             m_project->m_center[2] = z;
-
-            m_center.x = x;
-            m_center.y = y;
-            m_center.z = z;
 
             updateBlock();
         }
