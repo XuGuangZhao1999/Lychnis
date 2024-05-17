@@ -28,7 +28,6 @@ namespace app{
             int m_totalResolutions, m_currentResolution;
             int m_blockSize[3]{};
             QList<ChannelBarInfo *> m_channelInfos;
-            int m_currentChannel{0};
             cv::Point2i m_worldRange{100, 1000};
 
             VolumeViewer(LychnisReader& reader);

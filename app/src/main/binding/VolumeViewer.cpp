@@ -659,8 +659,7 @@ namespace app{
 
         void VolumeViewer::updateChannel(int channelId, int lower, int upper){
             if (channelId >= 0) {
-                m_currentChannel = channelId;
-                m_project->m_currentChannel = m_currentChannel - 1;
+                m_project->m_currentChannel = channelId - 1;
             }
             cv::Point2i *pRange = new cv::Point2i(lower, upper);
             if (nullptr != pRange) {
