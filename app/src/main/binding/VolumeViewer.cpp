@@ -510,6 +510,7 @@ namespace app{
             infos->SetDictionary("Center", centerInfo);
             infos->SetDictionary("BlockSize", blockSizeInfo);
             infos->SetList("Channels", channelInfos);
+            infos->SetString("Username", CefString(Common::i()->readConfig("user_name").toStdString()));  
             
             auto temp = CefValue::Create();
             temp->SetDictionary(infos);
@@ -639,6 +640,17 @@ namespace app{
 
             emit nodeImported();
             emit c->showMessage(tr("Nodes imported"), 500);
+
+            m_nodesManager = getNodesManager();
+            qDebug() << m_nodesManager->m_nodes;
+
+        }
+
+        void VolumeViewer::operateNodes(){
+            int code = m_nextNodeOperation.exchange(-1);
+            if (code < 0) { return; }
+
+            if (4 == code) { this->buildNodeGroups(); }
         }
 
         void VolumeViewer::updateResolution(int resId){
@@ -726,6 +738,19 @@ namespace app{
                 updateCenter(pos[0], pos[1], pos[2]);
                 return true;
             } else { return false; }
+        }
+
+        void VolumeViewer::setScaleNum(cv::Mat &image8bit){
+            scaleNum = m_lyRenderer.getScaleNum(m_lyCamera, image8bit);
+
+            auto scaleInfo = CefDictionaryValue::Create();
+            scaleInfo->SetInt("Scale", scaleNum);
+
+            auto temp = CefValue::Create();
+            temp->SetDictionary(scaleInfo);
+            auto msgData = CefWriteJSON(temp, JSON_WRITER_DEFAULT);
+
+            shared::util::BindingUtil::setInfos(m_frame, msgData);
         }
 
         bool VolumeViewer::onOpenImage(){

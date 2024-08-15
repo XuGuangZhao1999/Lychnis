@@ -17,7 +17,8 @@ class BindingUtil
 
 public:
     static void paintEvent(CefRefPtr<CefFrame> frame, app::binding::VolumeViewer& viewer){
-        cv::Mat image = viewer.renderToImage(); 
+        cv::Mat image = viewer.renderToImage();
+        viewer.setScaleNum(image);
                 
         std::vector<uchar> tempBuf;
         cv::imencode(".jpg", image, tempBuf);

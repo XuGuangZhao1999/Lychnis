@@ -11,6 +11,8 @@
 #include "include/cef_browser.h"
 #include "include/cef_values.h"
 
+#include "common.h"
+
 namespace app{
     namespace binding{
         AnnotationPanelBinding::AnnotationPanelBinding(){
@@ -18,6 +20,7 @@ namespace app{
 
             tasks.RegisterFunction("updateBlockSize", &AnnotationPanelBinding::onTaskUpdateBlockSize);
             tasks.RegisterFunction("updateCenter", &AnnotationPanelBinding::onTaskUpdateCenter);
+            tasks.RegisterFunction("updateUsername", &AnnotationPanelBinding::onTaskUpdateUsername);
         }
 
         bool AnnotationPanelBinding::OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, const CefString &request, bool persistent, CefRefPtr<Callback> callback){
@@ -55,6 +58,14 @@ namespace app{
         bool AnnotationPanelBinding::onTaskUpdateCenter(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
             auto center = args->GetDictionary("center");
             viewer->updateCenter(center->GetInt("x"), center->GetInt("y"), center->GetInt("z"));
+
+            callback->Success("Success");
+            return true;
+        }
+
+        bool AnnotationPanelBinding::onTaskUpdateUsername(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64_t queryId, CefRefPtr<CefDictionaryValue> args, bool persistent, CefRefPtr<Callback> callback){
+            auto name = args->GetString("username").ToString();
+            Common::i()->modifyConfig("user_name", QString::fromStdString(name));
 
             callback->Success("Success");
             return true;

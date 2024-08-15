@@ -16,6 +16,7 @@ namespace app{
             CefRefPtr<CefFrame> m_frame{nullptr};
             bool bResUpdated{false};
             int visableChannelCount{0};
+            int scaleNum{0};
 
             // lychnis: ViewerPanel's data members
             LychnisReader* m_project{nullptr};
@@ -23,6 +24,8 @@ namespace app{
             static std::string m_projectPath2Load;
             LychnisProjectReader* m_projectProto2Load{nullptr};
             ImportNodesInfo* m_nodesPath2Load{nullptr};
+            std::atomic_int m_currentRes3D{-1}, m_nextNodeOperation{-1};
+            NodesManager* m_nodesManager{nullptr};
 
             // Volume Information
             int m_totalResolutions, m_currentResolution;
@@ -34,6 +37,7 @@ namespace app{
             ~VolumeViewer();
             bool initViewer();
             void importNodes();
+            void operateNodes();
             bool openImageFile();
             void updateBlock();
             void setChannels(const QStringList &names, const QList<cv::Point3d> &colors);
@@ -69,7 +73,8 @@ namespace app{
             void updateChannelContrast(int lower, int upper);
 
             bool pickVolume(int x, int y) override;
-
+            void setScaleNum(cv::Mat &image8bit);
+            
             IMPLEMENT_REFCOUNTING(VolumeViewer);
             DISALLOW_COPY_AND_ASSIGN(VolumeViewer);
         };
